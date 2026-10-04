@@ -1,4 +1,4 @@
-name: LDFA Android CI
+name: dterm Android CI
 
 on:
   workflow_dispatch:
@@ -12,7 +12,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: ldfa-android-${{ github.workflow }}-${{ github.ref }}
+  group: dterm-android-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -68,7 +68,7 @@ jobs:
           grep -qx 'distributionSha256Sum=20f1b1176237254a6fc204d8434196fa11a4cfb387567519c61556e8710aed78' \
             gradle/wrapper/gradle-wrapper.properties
 
-      - name: Validate Debian and display controllers
+      - name: Validate dterm and display controllers
         shell: bash
         run: |
           set -euo pipefail
@@ -77,7 +77,7 @@ jobs:
           bash ./scripts/test-startup-controller.sh
           bash ./scripts/check-x11-controller.sh
 
-      - name: Test, lint and build LDFA APK
+      - name: Test, lint and build dterm APK
         shell: bash
         run: |
           set -o pipefail
@@ -88,9 +88,10 @@ jobs:
             :termux-runtime:lintDebug \
             :embedded-x11:lintDebug \
             assembleDebug \
+            assembleRelease \
             --stacktrace 2>&1 | tee gradle-build.log
 
-      - name: Verify embedded X11 and LDFA packaging
+      - name: Verify embedded X11 and dterm packaging
         if: success()
         shell: bash
         run: |
@@ -103,7 +104,8 @@ jobs:
               exit 1
             fi
           }
-          APK=app/build/outputs/apk/debug/app-debug.apk
+
+          APK=app/build/outputs/apk/release/dterm-release.apk
           test -f "$APK"
 
           if [ -x "$ANDROID_HOME/cmdline-tools/latest/bin/apkanalyzer" ]; then
@@ -123,10 +125,10 @@ jobs:
           # negative assertion), so every grep below reads a regular file.
           unzip -Z1 "$APK" > "$VERIFY_DIR/entries.txt"
           unzip -p "$APK" 'classes*.dex' | strings > "$VERIFY_DIR/dex-strings.txt"
-          unzip -p "$APK" assets/ldfa-host.sh > "$VERIFY_DIR/ldfa-host.sh"
-          unzip -p "$APK" assets/ldfa-x11.sh > "$VERIFY_DIR/ldfa-x11.sh"
-          cmp app/src/main/assets/ldfa-host.sh "$VERIFY_DIR/ldfa-host.sh"
-          bash scripts/check-host-script.sh "$VERIFY_DIR/ldfa-host.sh"
+          unzip -p "$APK" assets/dterm-host.sh > "$VERIFY_DIR/dterm-host.sh"
+          unzip -p "$APK" assets/dterm-x11.sh > "$VERIFY_DIR/dterm-x11.sh"
+          cmp app/src/main/assets/dterm-host.sh "$VERIFY_DIR/dterm-host.sh"
+          bash scripts/check-host-script.sh "$VERIFY_DIR/dterm-host.sh"
           "$APKANALYZER" manifest print "$APK" > "$VERIFY_DIR/manifest.xml"
           "$APKANALYZER" manifest application-id "$APK" > "$VERIFY_DIR/application-id.txt"
           "$ANDROID_HOME/build-tools/36.0.0/aapt" dump badging "$APK" > "$VERIFY_DIR/badging.txt"
@@ -148,7 +150,7 @@ jobs:
           for ABI in arm64-v8a x86_64; do
             grep -Fqx "lib/$ABI/libXlorie.so" "$VERIFY_DIR/entries.txt"
             PACKAGED_LIB="$VERIFY_DIR/libXlorie-$ABI.so"
-            STRIPPED_LIB="app/build/intermediates/stripped_native_libs/debug/stripDebugDebugSymbols/out/lib/$ABI/libXlorie.so"
+            STRIPPED_LIB="app/build/intermediates/stripped_native_libs/release/stripDebugRelease/out/lib/$ABI/libXlorie.so"
             SYMBOLS="$VERIFY_DIR/libXlorie-$ABI.symbols.txt"
             unzip -p "$APK" "lib/$ABI/libXlorie.so" > "$PACKAGED_LIB"
             test -s "$PACKAGED_LIB"
@@ -160,10 +162,10 @@ jobs:
               grep -Fxq "$SYMBOL" "$SYMBOLS"
             done
           done
-          grep -Fqx 'assets/ldfa-x11.sh' "$VERIFY_DIR/entries.txt"
+          grep -Fqx 'assets/dterm-x11.sh' "$VERIFY_DIR/entries.txt"
           grep -Fq 'EmbeddedX11ServerService' "$VERIFY_DIR/dex-strings.txt"
           grep -Fq 'EmbeddedX11ServiceController' "$VERIFY_DIR/dex-strings.txt"
-          grep -Fq 'com.hatake716.linuxdesktop.x11.EmbeddedX11ServerService' "$VERIFY_DIR/manifest.xml"
+          grep -Fq 'com.qali.dterm.x11.EmbeddedX11ServerService' "$VERIFY_DIR/manifest.xml"
           grep -Fq 'android:process=":x11"' "$VERIFY_DIR/manifest.xml"
           refute grep -Fq 'android.permission.RECORD_AUDIO' "$VERIFY_DIR/manifest.xml"
           python3 scripts/check-play-permissions.py "$VERIFY_DIR/manifest.xml"
@@ -183,73 +185,78 @@ jobs:
           # (the platform default blocks cleartext).
           refute grep -Fq 'networkSecurityConfig' "$VERIFY_DIR/manifest.xml"
           refute grep -Fq 'usesCleartextTraffic' "$VERIFY_DIR/manifest.xml"
-          # Declaring a com.termux-owned permission makes LDFA uninstallable next to
+          # Declaring a com.qali-owned permission makes dterm uninstallable next to
           # real Termux (INSTALL_FAILED_DUPLICATE_PERMISSION); ours must be namespaced.
           refute grep -Fq 'com.termux.permission' "$VERIFY_DIR/manifest.xml"
-          grep -Fq 'com.hatake716.linuxdesktop.permission.RUN_COMMAND' "$VERIFY_DIR/manifest.xml"
+          grep -Fq 'com.qali.dterm.permission.RUN_COMMAND' "$VERIFY_DIR/manifest.xml"
 
           # The obsolete app_process/loader and shell-owned Android lifecycle must not return.
           refute grep -Fq 'assets/x11-loader.apk' "$VERIFY_DIR/entries.txt"
-          refute grep -Fq '/system/bin/app_process' "$VERIFY_DIR/ldfa-x11.sh"
-          refute grep -Fq 'com.termux.x11.Loader' "$VERIFY_DIR/ldfa-x11.sh"
-          refute grep -Fq 'start-foreground-service' "$VERIFY_DIR/ldfa-x11.sh"
-          refute grep -Fq 'am start' "$VERIFY_DIR/ldfa-x11.sh"
+          refute grep -Fq '/system/bin/app_process' "$VERIFY_DIR/dterm-x11.sh"
+          refute grep -Fq 'com.termux.x11.Loader' "$VERIFY_DIR/dterm-x11.sh"
+          refute grep -Fq 'start-foreground-service' "$VERIFY_DIR/dterm-x11.sh"
+          refute grep -Fq 'am start' "$VERIFY_DIR/dterm-x11.sh"
 
           # The VNC compatibility backend was removed (its provisioning and even
           # warm starts were minutes-slow); nothing of it may ship again.
           refute grep -Fqx 'assets/ldfa-vnc.sh' "$VERIFY_DIR/entries.txt"
           refute grep -Fq 'VncFallbackActivity' "$VERIFY_DIR/dex-strings.txt"
 
-          # LDFA branding and Material 3 tools are included.
-          grep -Fxq 'com.hatake716.linuxdesktop' "$VERIFY_DIR/application-id.txt"
-          grep -Fq "versionCode='27' versionName='1.2.6'" "$VERIFY_DIR/badging.txt"
+          # dterm branding and Material 3 tools are included.
+          grep -Fxq 'com.qali.dterm' "$VERIFY_DIR/application-id.txt"
+          grep -Fq "versionCode='27' versionName='1.0.0'" "$VERIFY_DIR/badging.txt"
           grep -Fq "targetSdkVersion:'36'" "$VERIFY_DIR/badging.txt"
-          grep -Fq "application-label:'LDFA'" "$VERIFY_DIR/badging.txt"
+          grep -Fq "application-label:'dterm'" "$VERIFY_DIR/badging.txt"
           grep -Fq 'ToolsScreen' "$VERIFY_DIR/dex-strings.txt"
           grep -Fq 'ProcessExitDiagnostics' "$VERIFY_DIR/dex-strings.txt"
-          grep -Fq 'ldfaImeResizeV1' "$VERIFY_DIR/dex-strings.txt"
+          grep -Fq 'dtermImeResizeV1' "$VERIFY_DIR/dex-strings.txt"
+
+          # Bootstraps and Debian runtime are fully bundled in the APK with no startup
+          # network connection. dterm-host.sh and dterm-x11.sh ship with every build.
+          grep -Fq 'assets/dterm-host.sh' "$VERIFY_DIR/entries.txt"
+          grep -Fq 'assets/dterm-x11.sh' "$VERIFY_DIR/entries.txt"
 
           # Chrome keeps Google sign-in support while bounding its renderer pool.  The launcher
           # marker forces existing Debian environments to receive this update before startup.
-          grep -Fq '# LDFA_CHROME_LAUNCHER_VERSION=8' "$VERIFY_DIR/ldfa-host.sh"
-          grep -Fq '# LDFA_SESSION_RUNTIME_VERSION=38' "$VERIFY_DIR/ldfa-host.sh"
+          grep -Fq '# LDFA_CHROME_LAUNCHER_VERSION=8' "$VERIFY_DIR/dterm-host.sh"
+          grep -Fq '# LDFA_SESSION_RUNTIME_VERSION=38' "$VERIFY_DIR/dterm-host.sh"
           # The packaged host controller must carry the 1.2.5 audio bridge: no host
           # autospawn, no idle exit, and a start that waits for a slow PRoot daemon.
-          grep -Fq 'PULSE_BRIDGE_MARKER="# LDFA_PULSE_BRIDGE_VERSION=2"' "$VERIFY_DIR/ldfa-host.sh"
-          grep -Fq 'pulseaudio --daemonize=no --exit-idle-time=-1' "$VERIFY_DIR/ldfa-host.sh"
-          grep -Fq 'autospawn = no' "$VERIFY_DIR/ldfa-host.sh"
+          grep -Fq 'PULSE_BRIDGE_MARKER="# LDFA_PULSE_BRIDGE_VERSION=2"' "$VERIFY_DIR/dterm-host.sh"
+          grep -Fq 'pulseaudio --daemonize=no --exit-idle-time=-1' "$VERIFY_DIR/dterm-host.sh"
+          grep -Fq 'autospawn = no' "$VERIFY_DIR/dterm-host.sh"
           # 1.2.6: a stale PulseAudio pid file (number reused by another app's
           # process, hidden by /proc hidepid) must be removed before every start.
-          grep -Fq 'rm -f "$PULSE_RUNTIME_PATH/pid"' "$VERIFY_DIR/ldfa-host.sh"
-          grep -Fq -- '--renderer-process-limit=2' "$VERIFY_DIR/ldfa-host.sh"
-          grep -Fq -- '--disable-background-mode' "$VERIFY_DIR/ldfa-host.sh"
-          grep -Fq -- '--disable-extensions' "$VERIFY_DIR/ldfa-host.sh"
-          grep -Fq -- '--disable-component-extensions-with-background-pages' "$VERIFY_DIR/ldfa-host.sh"
-          grep -Fq 'wait -n -p exited_component_pid || true' "$VERIFY_DIR/ldfa-host.sh"
-          grep -Fq 'sleep 0.05' "$VERIFY_DIR/ldfa-host.sh"
-          refute grep -Fq -- '--single-process' "$VERIFY_DIR/ldfa-host.sh"
-          refute grep -Fq -- '--enable-low-end-device-mode' "$VERIFY_DIR/ldfa-host.sh"
+          grep -Fq 'rm -f "$PULSE_RUNTIME_PATH/pid"' "$VERIFY_DIR/dterm-host.sh"
+          grep -Fq -- '--renderer-process-limit=2' "$VERIFY_DIR/dterm-host.sh"
+          grep -Fq -- '--disable-background-mode' "$VERIFY_DIR/dterm-host.sh"
+          grep -Fq -- '--disable-extensions' "$VERIFY_DIR/dterm-host.sh"
+          grep -Fq -- '--disable-component-extensions-with-background-pages' "$VERIFY_DIR/dterm-host.sh"
+          grep -Fq 'wait -n -p exited_component_pid || true' "$VERIFY_DIR/dterm-host.sh"
+          grep -Fq 'sleep 0.05' "$VERIFY_DIR/dterm-host.sh"
+          refute grep -Fq -- '--single-process' "$VERIFY_DIR/dterm-host.sh"
+          refute grep -Fq -- '--enable-low-end-device-mode' "$VERIFY_DIR/dterm-host.sh"
 
           python3 scripts/verify-release-contents.py --apk "$APK" --report "$VERIFY_DIR/native-contents.json"
           "$ANDROID_HOME/build-tools/36.0.0/zipalign" -c -P 16 4 "$APK"
           "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify "$APK"
 
-          cp "$APK" app/build/outputs/apk/debug/LDFA-v1.2.0-debug.apk
+          cp "$APK" app/build/outputs/apk/release/dterm-release-signed.apk
 
       - name: Upload Gradle diagnostics
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: ldfa-gradle-build-log
+          name: dterm-gradle-build-log
           path: gradle-build.log
           if-no-files-found: warn
           retention-days: 7
 
-      - name: Upload LDFA debug APK
+      - name: Upload dterm release APK
         if: success()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: LDFA-v1.2.0-debug-apk
-          path: app/build/outputs/apk/debug/LDFA-v1.2.0-debug.apk
+          name: dterm-release-apk
+          path: app/build/outputs/apk/release/dterm-release-signed.apk
           if-no-files-found: error
           retention-days: 14

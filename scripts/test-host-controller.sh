@@ -2,7 +2,7 @@
 set -euo pipefail
 trap 'printf "Host controller test failed at line %s: %s\n" "$LINENO" "$BASH_COMMAND" >&2' ERR
 
-controller="${1:-app/src/main/assets/ldfa-host.sh}"
+controller="${1:-app/src/main/assets/dterm-host.sh}"
 
 # `! cmd` never trips `set -e`, so a negated check that fails would pass
 # silently. refute turns an unexpected success into a real test failure.
@@ -715,7 +715,7 @@ chmod +x "$sandbox/bin/proot-distro"
 export PROOT_LOGIN_LOG="$sandbox/proot-login.log"
 
 # Load the controller's functions without running main (drop the final dispatch).
-tz_lib="$sandbox/ldfa-host-lib.sh"
+tz_lib="$sandbox/dterm-host-lib.sh"
 sed '/^main "\$@"$/d' "$controller" > "$tz_lib"
 
 run_tz_case() {
@@ -797,7 +797,7 @@ grep -q '^timezone_ready=1$' <<<"$tz_report"
 # Image publication is atomic and refuses an existing user's rootfs.
 (
   source "$tz_lib"
-  staging_id=ldfa-image-atomic-test
+  staging_id=dterm-image-atomic-test
   staged="$PREFIX/var/lib/proot-distro/containers/$staging_id/rootfs"
   final="$PREFIX/var/lib/proot-distro/containers/atomic-test/rootfs"
   mkdir -p "$staged/etc" "$staged/bin"

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
-script="${1:-app/src/main/assets/ldfa-host.sh}"
+script="${1:-app/src/main/assets/dterm-host.sh}"
 
 # `! cmd` never trips `set -e`, so a negated check that fails would pass
 # silently. refute turns an unexpected success into a real test failure.
@@ -13,7 +13,7 @@ refute() {
 
 bash -n "$script"
 test_sandbox="$(mktemp -d)"
-generated_session="$test_sandbox/ldfa-session"
+generated_session="$test_sandbox/dterm-session"
 trap 'rm -rf "$test_sandbox"' EXIT
 sed -n '/^    cat <<'"'"'SESSION'"'"'$/,/^SESSION$/p' "$script" | sed '1d;$d' > "$generated_session"
 bash -n "$generated_session"

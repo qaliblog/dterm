@@ -1,4 +1,0 @@
-[submodule "vendor/termux-x11"]
-	path = vendor/termux-x11
-	url = https://github.com/termux/termux-x11.git
-	branch = master

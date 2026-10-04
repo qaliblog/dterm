@@ -1,7 +1,12 @@
 <resources>
-    <style name="Theme.LinuxDesktop" parent="android:style/Theme.Material.Light.NoActionBar">
+    <style name="Theme.dterm" parent="android:style/Theme.Material.Light.NoActionBar">
         <item name="android:fontFamily">sans</item>
         <item name="android:windowLightStatusBar">true</item>
+        <item name="android:actionBarStyle">@style/Widget.dterm.ActionBar</item>
+        <item name="android:actionBarSize">@dimen/action_bar_size</item>
+        <item name="android:actionMenuFadeDuration">300</item>
+        <item name="android:actionOverflowMenuStyle">@style/Widget.dterm.ActionBar.Overflow</item>
+        <item name="android:actionButtonStyle">@style/Widget.dterm.ActionButton</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
         <item name="android:windowNoTitle">true</item>

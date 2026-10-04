@@ -6,11 +6,21 @@ plugins {
     id("org.jetbrains.kotlin.plugin.compose")
 }
 
-// Play upload signing. keystore.properties is machine-local (gitignored) and
-// points at a keystore OUTSIDE the repo — see keystore.properties.example and
-// tools/release/README.md. When absent (CI, fresh clones), the release build
-// stays unsigned rather than failing.
-val keystorePropertiesFile = rootProject.file("keystore.properties")
+// Release signing.
+//
+// dterm ships a release key committed in the repo so that the GitHub workflow — and
+// every other machine that clones it — signs every release build with the SAME key.
+// That is what makes a release APK installable/updatable over an existing dterm
+// install instead of failing with a signature mismatch. This key is for
+// testing/distribution only; a real Play-upload key must still be configured for
+// Play. It is NOT a secret: the same values are documented in
+// keystore.properties.example.
+//
+// keystore.properties is machine-local (gitignored) and may point at a keystore
+// OUTSIDE the repo. When neither it nor the committed key is usable, the release
+// build stays unsigned rather than failing the whole build.
+val releaseKeyStoreFile = file("keystore/dterm-release.keystore")
+val keystorePropertiesFile = file("keystore.properties")
 val keystoreProperties = Properties().apply {
     if (keystorePropertiesFile.exists()) {
         keystorePropertiesFile.inputStream().use { load(it) }
@@ -18,46 +28,59 @@ val keystoreProperties = Properties().apply {
 }
 
 android {
-    namespace = "com.hatake716.linuxdesktop"
+    namespace = "com.qali.dterm"
     compileSdk = 36
     ndkVersion = "29.0.14206865"
 
     defaultConfig {
-        // Play rejects publishing under Termux's owned package name "com.termux"
-        // (impersonation). Use our own namespace, which also matches `namespace`
-        // above so the app's real data dir is /data/data/com.hatake716.linuxdesktop.
-        // The bundled Termux bootstrap is rebuilt under this same prefix
-        // (/data/data/com.hatake716.linuxdesktop/files/usr) via termux-packages with
-        // TERMUX_APP__PACKAGE_NAME set to match — see docs/ and the bootstrap zips.
-        applicationId = "com.hatake716.linuxdesktop"
+        // dterm's own Android package name. It is a completely separate app from
+        // Termux: own uid, own data dir (/data/data/com.qali.dterm), own
+        // permissions, no com.termux permission and no sharedUserId. That is what
+        // lets both apps be installed side by side on one device.
+        applicationId = "com.qali.dterm"
         minSdk = 26
         targetSdk = 36
         versionCode = 27
-        versionName = "1.2.6"
+        versionName = "1.0.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        vectorDrawables.useSupportLibrary = true
+
+        // dterm branding built into the APK; res/values/strings.xml is English-only.
+        buildConfigField("String", "APP_NAME", "\"dterm\"")
+        buildConfigField("String", "APPLICATION_ID", "\"com.qali.dterm\"")
+        // Reported to the bundled host script during `bootstrap`. Kept in sync with
+        // VERSION in app/src/main/assets/dterm-host.sh.
         buildConfigField("String", "HOST_SCRIPT_VERSION", "\"1.2.0\"")
+        vectorDrawables.useSupportLibrary = true
     }
 
     signingConfigs {
         // Pin the debug signing key to a keystore committed in the repo so EVERY
         // build (any machine, regardless of ANDROID_USER_HOME/ANDROID_SDK_HOME)
         // signs with the SAME key. Without this, the debug key is resolved from
-        // ~/.android or ~/.config/.android depending on the environment; when
-        // that path changed, the new APK's signature no longer matched the one
-        // already installed on devices and over-install failed with "app not
-        // installed". A debug keystore holds no secret (standard android/
-        // androiddebugkey credentials), so committing it is safe.
+        // ~/.android or ~/.config/.android depending on the environment; when that
+        // path changed, the new APK's signature no longer matched the one already
+        // installed on devices and over-install failed with "app not installed".
+        // A debug keystore holds no secret (standard android/androiddebugkey
+        // credentials), so committing it is safe.
         getByName("debug") {
             storeFile = file("keystore/ldfa-debug.keystore")
             storePassword = "android"
             keyAlias = "androiddebugkey"
             keyPassword = "android"
         }
-        if (keystorePropertiesFile.exists()) {
+        // Deterministic release signing: the committed key first, a machine-local
+        // keystore.properties second, and no signing config at all as the fallback.
+        if (releaseKeyStoreFile.exists()) {
             create("release") {
-                storeFile = File(keystoreProperties.getProperty("storeFile"))
+                storeFile = releaseKeyStoreFile
+                storePassword = "dtermtestkey1234"
+                keyAlias = "dtermreleasekey"
+                keyPassword = "dtermtestkey1234"
+            }
+        } else if (keystorePropertiesFile.exists()) {
+            create("release") {
+                storeFile = file(keystoreProperties.getProperty("storeFile"))
                 storePassword = keystoreProperties.getProperty("storePassword")
                 keyAlias = keystoreProperties.getProperty("keyAlias")
                 keyPassword = keystoreProperties.getProperty("keyPassword")
@@ -67,8 +90,8 @@ android {
 
     buildTypes {
         debug {
-            ndk { abiFilters += listOf("arm64-v8a", "x86_64") }
             signingConfig = signingConfigs.getByName("debug")
+            ndk { abiFilters += listOf("arm64-v8a", "x86_64") }
         }
         release {
             isMinifyEnabled = false
@@ -77,13 +100,10 @@ android {
                 "proguard-rules.pro",
             )
             signingConfig = signingConfigs.findByName("release")
-            // Play bundles default to ARM64. The release APK can include the
-            // separately built x86_64 runtime for testing the same signed APK
-            // on an emulator before installing it on an ARM64 physical device.
-            // Never include an ABI without both its own-prefix bootstrap and PRoot.
-            ndk {
-                abiFilters += providers.gradleProperty("ldfa.releaseAbis").orElse("arm64-v8a").get().split(",")
-            }
+            // Ship both the ARM64 (real device) and x86_64 (emulator/verification)
+            // runtimes, each with its own prefix bootstrap. Every native library,
+            // the rootfs bootstrap and the host scripts are bundled into this APK.
+            ndk { abiFilters += listOf("arm64-v8a", "x86_64") }
         }
     }
 

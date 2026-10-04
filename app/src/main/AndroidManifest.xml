@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:installLocation="internalOnly">
+    android:installLocation="auto">
 
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.INTERNET" />
@@ -20,7 +20,7 @@
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" tools:node="remove" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" tools:node="remove" />
     <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" tools:node="remove" />
-    <!-- Linux packages are installed inside the app; Android APK installation is not used. -->
+    <!-- dterm packages are installed inside the app; Android APK installation is not used. -->
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" tools:node="remove" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
@@ -31,13 +31,14 @@
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <application
-        android:name=".LinuxDesktopApplication"
+        android:name=".dterm.DtermApplication"
         android:allowBackup="false"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.LinuxDesktop"
+        android:theme="@style/Theme.dterm"
+        android:windowActionModeOverlay="true">
         tools:replace="android:allowBackup,android:icon,android:label,android:roundIcon,android:supportsRtl,android:theme">
 
         <activity
@@ -53,11 +54,11 @@
 
 
         <service
-            android:name=".data.TermuxResultService"
+            android:name=".dterm.data.TermuxResultService"
             android:exported="false" />
 
         <service
-            android:name=".x11.EmbeddedX11ServerService"
+            android:name=".dterm.x11.EmbeddedX11ServerService"
             android:exported="false"
             android:process=":x11"
             android:foregroundServiceType="specialUse">
@@ -67,16 +68,16 @@
         </service>
 
         <service
-            android:name=".service.DesktopKeepAliveService"
+            android:name=".dterm.service.DesktopKeepAliveService"
             android:exported="false"
             android:foregroundServiceType="dataSync|specialUse">
             <property
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
-                android:value="Keeps the user-started on-device Linux desktop session (Xorg + terminal runtime) alive and repairs it while in use; no standard FGS type (dataSync/mediaProjection/connectedDevice) matches a persistent local compute session." />
+                android:value="Keeps the user-started on-device Linux desktop session (Xorg + terminal runtime) alive and repairs it while in use; no standard FGS type (dataSync/mediaProjection/connectedDevice) matches a persistent local compute session. Part of dterm, a standalone Debian desktop app, not related to Termux." />
         </service>
 
         <service
-            android:name=".service.BackupService"
+            android:name=".dterm.service.BackupService"
             android:exported="false"
             android:foregroundServiceType="dataSync" />
     </application>

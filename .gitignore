@@ -1,22 +1,9 @@
-*.iml
+# Gradle
 .gradle/
-/local.properties
-/.idea/
-.DS_Store
-/build/
-/captures/
-.externalNativeBuild/
-.cxx/
-app/build/
-/embedded-x11/build/
-/termux-runtime/build/
-__pycache__/
-*.py[cod]
-gradle/wrapper/gradle-wrapper.jar
-.kotlin/
+build/
+local.properties
 
-# Play upload signing (machine-local; keystore lives outside the repo)
-/keystore.properties
-
-# Local Play submission bundles, screenshots, videos and verification records
-/release-assets/
+# Signing key
+keystore.properties
+keystore/*.jks
+keystore/*.keystore

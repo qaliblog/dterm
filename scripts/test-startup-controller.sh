@@ -12,7 +12,7 @@ repository="$(cd "$(dirname "$0")/.." && pwd)"
 sandbox="$(mktemp -d)"
 trap 'rm -rf "$sandbox"' EXIT
 export PREFIX="$sandbox/prefix" XDG_DATA_HOME="$sandbox/share"
-sed '/^main "\$@"$/d' "$repository/app/src/main/assets/ldfa-host.sh" > "$sandbox/host.sh"
+sed '/^main "\$@"$/d' "$repository/app/src/main/assets/dterm-host.sh" > "$sandbox/host.sh"
 (
     source "$sandbox/host.sh"
     rootfs="$XDG_DATA_HOME/proot-distro/containers/test/rootfs"
@@ -57,7 +57,7 @@ sed '/^main "\$@"$/d' "$repository/app/src/main/assets/ldfa-host.sh" > "$sandbox
     ensure_machine_id test >/dev/null
     [[ -s "$sandbox/machine-id-calls" ]]
 )
-sed '/^main "\$@"$/d' "$repository/app/src/main/assets/ldfa-x11.sh" > "$sandbox/x11.sh"
+sed '/^main "\$@"$/d' "$repository/app/src/main/assets/dterm-x11.sh" > "$sandbox/x11.sh"
 (
     source "$sandbox/x11.sh"
     service_alive() { return 0; }

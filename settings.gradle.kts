@@ -4,6 +4,19 @@ pluginManagement {
         mavenCentral()
         gradlePluginPortal()
     }
+    // The Android Gradle Plugin's plugin-marker artifacts are not published to
+    // every repository the plugin portal mirrors, so `plugins { id("com.android.application") }`
+    // can fail to resolve even though `com.android.tools.build:gradle:<version>` itself
+    // is available. Map the plugin ids straight onto the real module coordinates.
+    resolutionStrategy {
+        eachPlugin {
+            when (requested.id.id) {
+                "com.android.application",
+                "com.android.library",
+                -> useModule("com.android.tools.build:gradle:${requested.version}")
+            }
+        }
+    }
 }
 
 dependencyResolutionManagement {
@@ -30,5 +43,3 @@ project(":terminal-view").projectDir = file("vendor/termux-app/terminal-view")
 include(":termux-shared")
 project(":termux-shared").projectDir = file("vendor/termux-app/termux-shared")
 
-include(":shell-loader-stub")
-project(":shell-loader-stub").projectDir = file("vendor/termux-x11/shell-loader/stub")

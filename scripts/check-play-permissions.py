@@ -15,7 +15,7 @@ FORBIDDEN = {
 
 def check(path):
     root = ET.parse(path).getroot()
-    assert root.get('package') == 'com.hatake716.linuxdesktop', 'Unexpected package'
+    assert root.get('package') == 'com.qali.dterm', 'Unexpected package'
     permissions = {node.get(ANDROID + 'name') for node in root if node.tag.startswith('uses-permission')}
     assert not permissions & FORBIDDEN, f'Forbidden permissions: {permissions & FORBIDDEN}'
     for name in ['FOREGROUND_SERVICE_DATA_SYNC', 'FOREGROUND_SERVICE_SPECIAL_USE']:

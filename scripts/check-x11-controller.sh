@@ -10,7 +10,7 @@ refute() {
   fi
 }
 
-controller="${1:-app/src/main/assets/ldfa-x11.sh}"
+controller="${1:-app/src/main/assets/dterm-x11.sh}"
 repository="${2:-.}"
 bash -n "$controller"
 
@@ -40,12 +40,12 @@ for forbidden in \
   refute grep -Fq -- "$forbidden" "$controller"
 done
 
-service="$repository/app/src/main/java/com/hatake716/linuxdesktop/x11/EmbeddedX11ServerService.kt"
-lifecycle="$repository/app/src/main/java/com/hatake716/linuxdesktop/x11/EmbeddedX11ServiceController.kt"
-prereq="$repository/app/src/main/java/com/hatake716/linuxdesktop/x11/EmbeddedX11PrerequisiteController.kt"
-repository_source="$repository/app/src/main/java/com/hatake716/linuxdesktop/data/LinuxDesktopRepository.kt"
-host_compat="$repository/app/src/main/java/com/hatake716/linuxdesktop/data/HostScriptCompatibility.kt"
-keep_alive="$repository/app/src/main/java/com/hatake716/linuxdesktop/service/DesktopKeepAliveService.kt"
+service="$repository/app/src/main/java/com/qali/dterm/x11/EmbeddedX11ServerService.kt"
+lifecycle="$repository/app/src/main/java/com/qali/dterm/x11/EmbeddedX11ServiceController.kt"
+prereq="$repository/app/src/main/java/com/qali/dterm/x11/EmbeddedX11PrerequisiteController.kt"
+repository_source="$repository/app/src/main/java/com/qali/dterm/data/DtermRepository.kt"
+host_compat="$repository/app/src/main/java/com/qali/dterm/data/HostScriptCompatibility.kt"
+keep_alive="$repository/app/src/main/java/com/qali/dterm/service/DesktopKeepAliveService.kt"
 
 test -f "$service" -a -f "$lifecycle" -a -f "$prereq" -a -f "$repository_source" -a -f "$host_compat" -a -f "$keep_alive"
 grep -Fq -- 'class EmbeddedX11ServerService : Service()' "$service"
@@ -101,7 +101,7 @@ grep -Fq -- 'cleanupServiceStateAfterVerifiedExit' "$lifecycle"
 refute grep -Fq -- '/system/bin/am' "$lifecycle"
 
 grep -Fq -- 'object EmbeddedX11PrerequisiteController' "$prereq"
-grep -Fq -- 'context.assets.open("ldfa-x11.sh")' "$prereq"
+grep -Fq -- 'context.assets.open("dterm-x11.sh")' "$prereq"
 grep -Fq -- 'runBundledX11Script' "$prereq"
 grep -Fq -- 'action = "prepare"' "$prereq"
 
@@ -366,8 +366,8 @@ ensure = source.index("ensureBundledDesktopApps(id)", start)
 display = source.index("selectAndStartDisplayBackend(id, onProgress)", start)
 assert start < ensure < display
 PY
-controller="$repository/app/src/main/java/com/hatake716/linuxdesktop/x11/EmbeddedX11ServiceController.kt"
-application="$repository/app/src/main/java/com/hatake716/linuxdesktop/LinuxDesktopApplication.kt"
+controller="$repository/app/src/main/java/com/qali/dterm/x11/EmbeddedX11ServiceController.kt"
+application="$repository/app/src/main/java/com/qali/dterm/DtermApplication.kt"
 grep -Fq -- 'fun restoreDisplayAccess(context: Context): Boolean' "$controller"
 grep -Fq -- 'if (!isExpectedServiceReady(context, state.generation)) return false' "$controller"
 grep -Fq -- 'EmbeddedX11Display.restoreLaunchGeneration(state.generation)' "$controller"
@@ -377,7 +377,7 @@ grep -Fq -- 'registerX11ViewerLifecycle()' "$application"
 grep -Fq -- 'if (activity !is X11MainActivity) return' "$application"
 grep -Fq -- 'scheduleViewerResumeRecovery()' "$application"
 grep -Fq -- 'repository.recoverActiveDesktopAfterViewerResume()' "$application"
-grep -Fq -- 'EmbeddedX11ServiceController.openDisplay(this@LinuxDesktopApplication)' "$application"
+grep -Fq -- 'EmbeddedX11ServiceController.openDisplay(this@DtermApplication)' "$application"
 grep -Fq -- 'suspend fun recoverActiveDesktopAfterViewerResume()' "$repository_source"
 grep -Fq -- 'desktopResumeProcessState(id)' "$repository_source"
 grep -Fq -- 'viewer resume used zero-process fast path' "$repository_source"
@@ -397,16 +397,16 @@ resume = source[start:end]
 assert "runInstalledHost" in resume
 assert "runBundledHostScript" not in resume
 PY
-main_activity="$repository/app/src/main/java/com/hatake716/linuxdesktop/MainActivity.kt"
-main_view_model="$repository/app/src/main/java/com/hatake716/linuxdesktop/ui/MainViewModel.kt"
+main_activity="$repository/app/src/main/java/com/qali/dterm/MainActivity.kt"
+main_view_model="$repository/app/src/main/java/com/qali/dterm/ui/MainViewModel.kt"
 grep -Fq -- 'viewModel.setHostActivityVisible(true)' "$main_activity"
 grep -Fq -- 'viewModel.setHostActivityVisible(false)' "$main_activity"
 grep -Fq -- 'fun setHostActivityVisible(visible: Boolean)' "$main_view_model"
 grep -Fq -- 'containerRefreshJob?.cancel()' "$main_view_model"
-# The VNC fallback (VncFallbackActivity / ldfa-vnc.sh) was removed: nothing of
+# The VNC fallback (VncFallbackActivity / dterm-vnc.sh) was removed: nothing of
 # it may return.
-refute test -e "$repository/app/src/main/java/com/hatake716/linuxdesktop/display/VncFallbackActivity.kt"
-refute test -e "$repository/app/src/main/assets/ldfa-vnc.sh"
+refute test -e "$repository/app/src/main/java/com/qali/dterm/display/VncFallbackActivity.kt"
+refute test -e "$repository/app/src/main/assets/dterm-vnc.sh"
 
 settings="$repository/settings.gradle.kts"
 app_build="$repository/app/build.gradle.kts"
@@ -416,10 +416,10 @@ refute grep -Fq -- 'x11-loader-assets' "$app_build"
 grep -Fq -- 'versionName = "1.2.6"' "$app_build"
 grep -Fq -- 'HOST_SCRIPT_VERSION", "\"1.2.0\""' "$app_build"
 
-startup_overlay="$repository/app/src/main/java/com/hatake716/linuxdesktop/ui/DesktopStartupOverlay.kt"
-main_view_model="$repository/app/src/main/java/com/hatake716/linuxdesktop/ui/MainViewModel.kt"
-settings_screen="$repository/app/src/main/java/com/hatake716/linuxdesktop/ui/SettingsScreen.kt"
-process_exit_diagnostics="$repository/app/src/main/java/com/hatake716/linuxdesktop/data/ProcessExitDiagnostics.kt"
+startup_overlay="$repository/app/src/main/java/com/qali/dterm/ui/DesktopStartupOverlay.kt"
+main_view_model="$repository/app/src/main/java/com/qali/dterm/ui/MainViewModel.kt"
+settings_screen="$repository/app/src/main/java/com/qali/dterm/ui/SettingsScreen.kt"
+process_exit_diagnostics="$repository/app/src/main/java/com/qali/dterm/data/ProcessExitDiagnostics.kt"
 grep -Fq -- 'desktopStartInProgress' "$main_view_model"
 grep -Fq -- '起動ログ' "$startup_overlay"
 refute grep -Fq -- 'X11ディスプレイを開く' "$settings_screen"
