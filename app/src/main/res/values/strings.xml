@@ -10,13 +10,13 @@
     <string name="close">Close</string>
     <string name="backup_channel_name">Backup</string>
     <string name="backup_channel_desc">Shows progress for backing up and restoring an environment</string>
-    <string name="backup_notif_counting">Counting items…</string>
-    <string name="backup_notif_creating">Creating backup…</string>
+    <string name="backup_notif_counting">Counting items...</string>
+    <string name="backup_notif_creating">Creating backup...</string>
     <string name="backup_notif_done">Created %1$s (%2$s)</string>
     <string name="backup_path_label">Save location</string>
     <string name="backup_done_location">Saved to: Phone ▸ Download ▸ dterm\nYou can copy it out with the Files app.</string>
     <string name="backup_skipped_note">Skipped %1$d special files, %2$d unreadable</string>
-    <string name="restore_notif_running">Restoring backup…</string>
+    <string name="restore_notif_running">Restoring backup...</string>
     <string name="restore_notif_done">Restored %1$s</string>
     <string name="restore_done_detail">Added to the home screen list. On first launch, review the display and runtime settings for this device.</string>
 
@@ -30,13 +30,13 @@
     <string name="backup_dest">Save folder</string>
     <string name="backup_dest_default">Phone ▸ Download ▸ dterm</string>
     <string name="backup_dest_hint">Copy it out of the Downloads ▸ dterm folder in the Files app.</string>
-    <string name="backup_notif_exporting">Writing backup to the save location…</string>
+    <string name="backup_notif_exporting">Writing backup to the save location...</string>
     <string name="backup_dest_legacy">dterm app-only save location ▸ backups</string>
     <string name="backup_hint_legacy">Copy it out of the finish screen save location. Copy to external storage before uninstalling.</string>
     <string name="backup_done_location_legacy">Saved to the app-only save location. Backups are deleted when you uninstall, so copy them out first.</string>
     <string name="backup_dest_fullpath">Full path: %1$s</string>
     <string name="backup_start">Start backup</string>
-    <string name="backup_running">Backing up…</string>
+    <string name="backup_running">Backing up...</string>
     <string name="backup_running_files">%1$d / %2$d items</string>
     <string name="backup_done_title">Backup complete</string>
     <string name="backup_failed_title">Backup failed</string>
@@ -46,7 +46,7 @@
     <string name="restore_title">Restore from backup</string>
     <string name="restore_subtitle">Restores an environment from a .ldfa file. Existing environments are not overwritten.</string>
     <string name="restore_pick_file">Select a .ldfa file</string>
-    <string name="restore_loading_file">Reading file…</string>
+    <string name="restore_loading_file">Reading file...</string>
     <string name="restore_no_file">No file selected</string>
     <string name="restore_header_from">Source</string>
     <string name="restore_header_app">App version</string>
@@ -54,7 +54,7 @@
     <string name="restore_header_created">Created</string>
     <string name="restore_arch_mismatch">Can't restore %2$s to this device (%1$s).</string>
     <string name="restore_start">Restore with these contents</string>
-    <string name="restore_running">Restoring…</string>
+    <string name="restore_running">Restoring...</string>
     <string name="restore_done_title">Restore complete</string>
     <string name="restore_failed_title">Restore failed</string>
     <string name="restore_cancelled">Restore cancelled</string>
