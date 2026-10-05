@@ -4,6 +4,7 @@ import android.os.Binder;
 import android.os.IBinder;
 import android.os.ParcelFileDescriptor;
 import android.os.RemoteException;
+import java.io.IOException;
 
 /**
  * Binder interface exposed by the dedicated Android X11 service process to the viewer. The
