@@ -625,7 +625,7 @@ rm -f "$PULSE_FAKE_ROOT/daemon" "$PULSE_FAKE_ROOT/daemon.pid"
 
 created="$(bash "$controller" create desk-test '仕事用 Debian XFCE')"
 [[ "$created" == desk-test ]]
-[[ -d "$HOME/storage/shared/LinuxDesktop/desk-test" ]]
+[[ -d "$HOME/storage/shared/dterm/desk-test" ]]
 
 record="$(bash "$controller" list)"
 IFS=$'\t' read -r id encoded_name state progress encoded_message display created_at alive desktop <<<"$record"
@@ -642,7 +642,7 @@ IFS=$'\t' read -r id encoded_name state progress encoded_message display created
 
 bash "$controller" delete desk-test 0
 [[ ! -d "$XDG_DATA_HOME/linux-desktop-for-android/containers/desk-test" ]]
-[[ -d "$HOME/storage/shared/LinuxDesktop/desk-test" ]]
+[[ -d "$HOME/storage/shared/dterm/desk-test" ]]
 
 created="$(bash "$controller" create personal-test '個人用 Debian')"
 [[ "$created" == personal-test ]]
@@ -652,7 +652,7 @@ IFS=$'\t' read -r id encoded_name state progress encoded_message display created
 [[ "$(cat "$XDG_DATA_HOME/linux-desktop-for-android/containers/personal-test/distribution")" == debian ]]
 [[ "$(cat "$XDG_DATA_HOME/linux-desktop-for-android/containers/personal-test/image")" == debian:12 ]]
 bash "$controller" delete personal-test 1
-[[ ! -d "$HOME/storage/shared/LinuxDesktop/personal-test" ]]
+[[ ! -d "$HOME/storage/shared/dterm/personal-test" ]]
 
 created="$(bash "$controller" create pin-test '固定Debian')"
 [[ "$created" == pin-test ]]

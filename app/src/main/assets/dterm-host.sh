@@ -74,7 +74,7 @@ PULSE_DAEMON_DROP_IN="$PREFIX/etc/pulse/daemon.conf.d/99-ldfa-noshm.conf"
 # An autospawned "pulseaudio --start --log-target=syslog" skips the flags below
 # and keeps PulseAudio's 20 s idle exit, so it quit (taking the bridge socket
 # with it) before XFCE connected. The only daemon is the one we start.
-PULSE_CLIENT_DROP_IN="$PREFIX/etc/pulse/client.conf.d/99-dterm-host.conf"
+PULSE_CLIENT_DROP_IN="$PREFIX/etc/pulse/client.conf.d/99-ldfa-host.conf"
 PULSE_DAEMON_LOG="$LOG_ROOT/pulseaudio.log"
 # Every host PulseAudio binary runs through the native-library PRoot. On ARM
 # phones a cold daemon start (LD_BIND_NOW re-exec, ~16 modules, the Android
