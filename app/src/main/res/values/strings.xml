@@ -52,7 +52,7 @@
     <string name="restore_header_app">App version</string>
     <string name="restore_header_arch">Architecture</string>
     <string name="restore_header_created">Created</string>
-    <string name="restore_arch_mismatch">Can't restore %2$s to this device (%1$s).</string>
+    <string name="restore_arch_mismatch">Cannot restore %2$s to this device (%1$s).</string>
     <string name="restore_start">Restore with these contents</string>
     <string name="restore_running">Restoring...</string>
     <string name="restore_done_title">Restore complete</string>
