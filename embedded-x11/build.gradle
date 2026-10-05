@@ -4,40 +4,15 @@ plugins {
 
 android {
     namespace 'com.termux.x11'
-    compileSdkVersion project.properties.compileSdkVersion.toInteger()
-    ndkVersion project.properties.ndkVersion
+    compileSdk = 36
+    ndkVersion = "29.0.14206865"
 
     defaultConfig {
-        ndk { abiFilters 'arm64-v8a', 'x86_64' }
         minSdkVersion 26
-        targetSdkVersion project.properties.targetSdkVersion.toInteger()
+        targetSdkVersion 36
         buildConfigField 'String', 'VERSION_NAME', '"1.03.01-embedded"'
-        buildConfigField 'String', 'COMMIT', '"50ac80fb2d4a475e323e752d17fcc0483c3c99fc"'
-        // Must match :app's applicationId. Lorie's PrefsProto calls
-        // createPackageContext(APPLICATION_ID) at viewer startup, so a stale
-        // value here crashes MainActivity with NameNotFoundException.
-        buildConfigField 'String', 'APPLICATION_ID', '"com.hatake716.linuxdesktop"'
+        buildConfigField 'String', 'APPLICATION_ID', '"com.qali.dterm"'
         consumerProguardFiles 'proguard-rules.pro'
-    }
-
-    sourceSets {
-        main {
-            // Generate a reproducible embedded variant instead of relying on a dirty submodule.
-            // This normalizes JNI annotations and removes the obsolete TCP reconnect path.
-            java.srcDirs = [
-                'build/generated/upstream-java',
-                'src/main/java',
-                'build/generated/java'
-            ]
-            res.srcDirs = [
-                'build/generated/embedded-res',
-                'src/main/res'
-            ]
-            aidl.srcDirs = [
-                '../vendor/termux-x11/lorie/src/main/aidl'
-            ]
-            manifest.srcFile 'src/main/AndroidManifest.xml'
-        }
     }
 
     compileOptions {
@@ -47,8 +22,6 @@ android {
 
     externalNativeBuild {
         cmake {
-            // Keep the upstream submodule pristine and replace only embedded-sensitive native
-            // translation units from a generated build directory.
             path file('src/main/cpp/CMakeLists.txt')
         }
     }
@@ -60,7 +33,6 @@ android {
     }
 
     buildFeatures {
-        aidl true
         buildConfig true
     }
 
@@ -70,24 +42,8 @@ android {
 }
 
 dependencies {
+    implementation project(':app')
     implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8:2.0.21'
     implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.7'
     implementation 'androidx.preference:preference:1.2.1'
 }
-
-def prepareEmbeddedJava = tasks.register('prepareEmbeddedJava') {
-    def upstreamJava = file('../vendor/termux-x11/lorie/src/main/java')
-    def generatedJava = file('build/generated/upstream-java')
-    def resDir = file('build/generated/embedded-res')
-    // upstream sources live in an unobtainable vendor submodule; generate empty
-    // placeholders so the embedded build still compiles.
-    doLast {
-        generatedJava.mkdirs()
-        resDir.mkdirs()
-        // The real upstream Java is not shippable in a broken clone; the app
-        // provides EmbeddedX11Display/EmbeddedX11ServerBridge directly.
-        new File(generatedJava, 'com/termux/x11/EmbeddedX11Placeholder.java').parentFile.mkdirs(); new File(generatedJava, 'com/termux/x11/EmbeddedX11Placeholder.java').text = 'package com.termux.x11;' + '\n' + 'public class EmbeddedX11Placeholder { }' + '\n'
-        new File(resDir, 'xml/placeholder.xml').parentFile.mkdirs(); new File(resDir, 'xml/placeholder.xml').text = '<?xml version="1.0" encoding="utf-8"?><placeholder/>' + '\n'
-    }
-}
-preBuild.dependsOn tasks.named('prepareEmbeddedJava')

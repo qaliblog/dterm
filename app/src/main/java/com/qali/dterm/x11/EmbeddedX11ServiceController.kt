@@ -38,7 +38,7 @@ internal object EmbeddedX11ServiceController {
             expectedServiceGeneration = state.generation
             displayOpenFailure = null
         }
-        EmbeddedX11Display.restoreLaunchGeneration(state.generation)
+        EmbeddedX11Display.restoreLaunchGeneration(state.generation, context)
         Log.i(
             LIFECYCLE_LOG_TAG,
             "restored viewer access for verified live X11 generation=${state.generation}",

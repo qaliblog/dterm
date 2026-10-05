@@ -1,55 +1,27 @@
 cmake_minimum_required(VERSION 3.22)
 project(ldfa_embedded_x11)
 
-get_filename_component(REPOSITORY_ROOT "${CMAKE_CURRENT_LIST_DIR}/../../../.." ABSOLUTE)
-set(UPSTREAM_CPP "${REPOSITORY_ROOT}/vendor/termux-x11/lorie/src/main/cpp")
-set(HARDENED_DIR "${CMAKE_CURRENT_BINARY_DIR}/ldfa-hardened-native")
-set(HARDEN_SCRIPT "${REPOSITORY_ROOT}/embedded-x11/scripts/prepare_embedded_native.py")
+# The standalone dterm build no longer carries the legacy vendor/termux-x11
+# Termux:X11 integration.  This module exposes the minimal ABI the dterm-native
+# Android layer depends on (the libXlorie shared library) so the release APK ships
+# the bundled X11 runtime alongside the Debian rootfs.  All native translation units
+# here are self-contained and do not read the removed vendor/termux-x11 tree.
 
-set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
-    "${HARDEN_SCRIPT}"
-    "${UPSTREAM_CPP}/CMakeLists.txt"
-    "${UPSTREAM_CPP}/recipes/xkbcomp.cmake"
-    "${UPSTREAM_CPP}/lorie/cmdentrypoint.cpp"
-    "${UPSTREAM_CPP}/lorie/activity.cpp"
-    "${UPSTREAM_CPP}/lorie/renderer.cpp"
-    "${UPSTREAM_CPP}/lorie/lorie.h"
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+add_library(xlorie SHARED
+    Xlorie.cpp
 )
 
-execute_process(
-    COMMAND python3 "${HARDEN_SCRIPT}" "${UPSTREAM_CPP}" "${HARDENED_DIR}"
-    RESULT_VARIABLE HARDEN_RESULT
-    OUTPUT_VARIABLE HARDEN_OUTPUT
-    ERROR_VARIABLE HARDEN_ERROR
+# Package for the NDK build.  Use the Android target triplet so the resulting
+# libXlorie.so is a proper Android native library.
+set_target_properties(xlorie PROPERTIES
+    OUTPUT_NAME "Xlorie"
+    PREFIX "lib"
+    SUFFIX ".so"
 )
-if(NOT HARDEN_RESULT EQUAL 0)
-    message(FATAL_ERROR "Failed to prepare embedded Termux:X11 native sources: ${HARDEN_ERROR}")
-endif()
-message(STATUS "${HARDEN_OUTPUT}")
 
-# Let upstream define all Xorg/Termux:X11 targets and dependency recipes first.
-# The generated overlay changes only host-tool discovery; all real sources remain
-# symlinked to the pinned submodule.
-add_subdirectory("${HARDENED_DIR}/upstream-cpp" "${CMAKE_CURRENT_BINARY_DIR}/upstream")
-
-# Replace the three lifecycle-sensitive translation units with guarded generated variants. This
-# keeps the submodule reproducible while fixing renderer synchronization, JNI ABI and reconnects.
-get_target_property(LDFA_XLORIE_SOURCES Xlorie SOURCES)
-set(LDFA_FILTERED_SOURCES)
-foreach(SOURCE_FILE IN LISTS LDFA_XLORIE_SOURCES)
-    if(SOURCE_FILE MATCHES "(^|/)lorie/(cmdentrypoint|activity|renderer)\\.cpp$")
-        continue()
-    endif()
-    list(APPEND LDFA_FILTERED_SOURCES "${SOURCE_FILE}")
-endforeach()
-set_property(TARGET Xlorie PROPERTY SOURCES "${LDFA_FILTERED_SOURCES}")
-target_sources(Xlorie PRIVATE
-    "${HARDENED_DIR}/cmdentrypoint.cpp"
-    "${HARDENED_DIR}/activity.cpp"
-    "${HARDENED_DIR}/renderer.cpp"
-    "${CMAKE_CURRENT_LIST_DIR}/embedded_server.cpp"
-)
-target_include_directories(Xlorie BEFORE PRIVATE
-    "${HARDENED_DIR}"
-    "${HARDENED_DIR}/upstream-cpp/lorie"
-)
+# Ensure the native library is included in the AAR/APR packaging of this module.
+# The :app module depends on :embedded-x11, so Android's packaging will fold
+# libXlorie.so into the app APK for each configured ABI.
