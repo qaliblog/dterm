@@ -57,6 +57,15 @@ public interface ICmdEntryInterface extends android.os.IInterface {
         }
 
         @Override
+        public IBinder asBinder() {
+            return mRemote;
+        }
+
+        Proxy(IBinder remote) {
+            this.mRemote = remote;
+        }
+
+        @Override
         public ParcelFileDescriptor getXConnection() throws RemoteException {
             return ParcelFileDescriptor.fromFd(
                 0
