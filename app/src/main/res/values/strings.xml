@@ -14,7 +14,7 @@
     <string name="backup_notif_creating">Creating backup...</string>
     <string name="backup_notif_done">Created %1$s (%2$s)</string>
     <string name="backup_path_label">Save location</string>
-    <string name="backup_done_location">Saved to: Phone ▸ Download ▸ dterm\nYou can copy it out with the Files app.</string>
+    <string name="backup_done_location">Saved to: Phone > Download > dterm\nYou can copy it out with the Files app.</string>
     <string name="backup_skipped_note">Skipped %1$d special files, %2$d unreadable</string>
     <string name="restore_notif_running">Restoring backup...</string>
     <string name="restore_notif_done">Restored %1$s</string>
@@ -28,10 +28,10 @@
     <string name="backup_pick_env">Pick environment to back up</string>
     <string name="backup_no_stopped_env">No stopped environment. Stop any running environment first.</string>
     <string name="backup_dest">Save folder</string>
-    <string name="backup_dest_default">Phone ▸ Download ▸ dterm</string>
-    <string name="backup_dest_hint">Copy it out of the Downloads ▸ dterm folder in the Files app.</string>
+    <string name="backup_dest_default">Phone > Download > dterm</string>
+    <string name="backup_dest_hint">Copy it out of the Downloads > dterm folder in the Files app.</string>
     <string name="backup_notif_exporting">Writing backup to the save location...</string>
-    <string name="backup_dest_legacy">dterm app-only save location ▸ backups</string>
+    <string name="backup_dest_legacy">dterm app-only save location > backups</string>
     <string name="backup_hint_legacy">Copy it out of the finish screen save location. Copy to external storage before uninstalling.</string>
     <string name="backup_done_location_legacy">Saved to the app-only save location. Backups are deleted when you uninstall, so copy them out first.</string>
     <string name="backup_dest_fullpath">Full path: %1$s</string>
