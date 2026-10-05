@@ -63,8 +63,12 @@ public interface ICmdEntryInterface extends android.os.IInterface {
         }
 
         @Override
-        public ParcelFileDescriptor getXConnection() throws RemoteException, IOException {
-            return ParcelFileDescriptor.fromFd(0);
+        public ParcelFileDescriptor getXConnection() throws RemoteException {
+            try {
+                return ParcelFileDescriptor.fromFd(0);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         }
 
         @Override
