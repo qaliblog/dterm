@@ -12,7 +12,6 @@ import com.qali.dterm.service.DesktopKeepAliveService
 import com.qali.dterm.x11.EmbeddedX11ServiceController
 import com.termux.app.TermuxApplication
 import com.termux.x11.EmbeddedX11Display
-import com.termux.x11.MainActivity as X11MainActivity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
@@ -181,52 +180,17 @@ class DtermApplication : TermuxApplication() {
         }
     }
 
+    /**
+     * No-op. The embedded-X11 viewer is a plain [MainActivity] in the main process and binds to the
+     * dedicated :x11 service through [EmbeddedX11ServiceController]. The_activity lifecycle is only
+     * used to start/stop the display, which is owned by the UI layer ([MainViewModel.startContainer]
+     * -> [DtermRepository.startContainer] -> [EmbeddedX11ServiceController.openDisplay]), so nothing
+     * needs to be wired here.
+     */
     private fun registerX11ViewerLifecycle() {
-        registerActivityLifecycleCallbacks(object : ActivityLifecycleCallbacks {
-            override fun onActivityResumed(activity: Activity) {
-                if (activity !is X11MainActivity) return
-
-                // Activity.onCreate first gets a chance to consume the Binder retained in the
-                // task Intent. If Android discarded that Binder, bind to the verified live service
-                // on the next main-loop turn. The repository health operation below independently
-                // verifies the Linux clients, so a live Xorg process can never mask dead XFCE.
-                if (!EmbeddedX11Display.isTransportConnected()) {
-                    activity.window.decorView.post {
-                        if (!activity.isFinishing && !EmbeddedX11Display.isTransportConnected()) {
-                            EmbeddedX11ServiceController.openDisplay(this@DtermApplication)
-                        }
-                    }
-                }
-                scheduleViewerResumeRecovery()
-            }
-
-            override fun onActivityCreated(activity: Activity, state: Bundle?) = Unit
-            override fun onActivityStarted(activity: Activity) {
-                if (activity is X11MainActivity) {
-                    com.qali.dterm.ui.attachDesktopStartupOverlay(activity, desktopStartup)
-                }
-            }
-            override fun onActivityPaused(activity: Activity) = Unit
-            override fun onActivityStopped(activity: Activity) = Unit
-            override fun onActivitySaveInstanceState(activity: Activity, state: Bundle) = Unit
-            override fun onActivityDestroyed(activity: Activity) = Unit
-        })
     }
 
     @Synchronized
-    private fun scheduleViewerResumeRecovery() {
-        if (viewerResumeRecovery?.isActive == true) return
-        val operation = sessionScope.launch {
-            repository.recoverActiveDesktopAfterViewerResume()
-        }
-        viewerResumeRecovery = operation
-        operation.invokeOnCompletion {
-            synchronized(this@DtermApplication) {
-                if (viewerResumeRecovery === operation) viewerResumeRecovery = null
-            }
-        }
-    }
-
     private fun currentProcessName(): String? {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) return Application.getProcessName()
         return runCatching {
