@@ -7,7 +7,6 @@ import com.qali.dterm.data.TermuxCommandClient
 import com.qali.dterm.x11.EmbeddedX11PrerequisiteController
 import com.qali.dterm.x11.EmbeddedX11ServiceController
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import kotlin.time.Duration.Companion.minutes
 import java.io.File
 
@@ -68,7 +67,7 @@ object EmbeddedX11Display {
 
     /** Stops the :x11 service, terminating the Xorg server. */
     fun close(context: Context) {
-        withContext(Dispatchers.Main) {
+        kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
             EmbeddedX11ServiceController.stopAndWait(context)
         }
     }
