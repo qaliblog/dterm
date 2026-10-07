@@ -8,6 +8,7 @@ import com.qali.dterm.x11.EmbeddedX11PrerequisiteController
 import com.qali.dterm.x11.EmbeddedX11ServiceController
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlin.time.Duration.Companion.minutes
 import java.io.File
 
 /** The standalone dterm build ships its own X11 viewer in the main process and its own Xorg
@@ -67,7 +68,9 @@ object EmbeddedX11Display {
 
     /** Stops the :x11 service, terminating the Xorg server. */
     fun close(context: Context) {
-        EmbeddedX11ServiceController.stopAndWait(context)
+        withContext(Dispatchers.Main) {
+            EmbeddedX11ServiceController.stopAndWait(context)
+        }
     }
 
     /**
@@ -81,11 +84,6 @@ object EmbeddedX11Display {
         EmbeddedX11ServiceController.restoreDisplayAccess(context)
     }
 
-    /**
-     * Returns a reachable application context for foreground X11 operations, or {@code null} when
-     * no context is available (e.g. during tests). Callers that need a real context should pass
-     * one in explicitly.
-     */
-    val serviceStateFile: File
-        get() = File("/data/data/com.qali.dterm/files/" + "embedded-x11-service.state")
+    /** Returns the persisted service-file path. */
+    fun serviceStateFile(): File = File("/data/data/com.qali.dterm/files/" + "embedded-x11-service.state")
 }
