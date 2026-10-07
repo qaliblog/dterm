@@ -22,33 +22,27 @@ import java.io.File
 object EmbeddedX11Display {
 
     /** Returns the dterm-native :x11 service's present serial, or 0 if unavailable. */
-    val successfulPresentSerial: Long
-        get() {
-            return try {
-                // The service publishes its generation to filesDir/embedded-x11-service.state.
-                // The binder approach above would require a bound context; fall back to the
-                // service state file so the host-controller path stays correct.
-                1L
-            } catch (e: Exception) {
-                Log.e("EmbeddedX11Display", "successfulPresentSerial failed", e)
-                0L
-            }
-        }
+    fun successfulPresentSerial(): Long = try {
+        // The service publishes its generation to filesDir/embedded-x11-service.state.
+        // The binder approach above would require a bound context; fall back to the
+        // service state file so the host-controller path stays correct.
+        1L
+    } catch (e: Exception) {
+        Log.e("EmbeddedX11Display", "successfulPresentSerial failed", e)
+        0L
+    }
 
     /** Returns true once the :x11 service is up and its Unix socket is bound. */
-    val isOpen: Boolean
-        get() = serviceStateFile().isFile
+    fun isOpen(): Boolean = serviceStateFile().isFile
 
     /** Returns true once the :x11 service is up and its Unix socket is bound. */
-    val isViewerReady: Boolean
-        get() = isOpen
+    fun isViewerReady(): Boolean = isOpen()
 
     /** Returns true while the :x11 service owner is the foreground process. */
-    val isViewerForeground: Boolean
-        get() = isOpen
+    fun isViewerForeground(): Boolean = isOpen()
 
     val isConnected: Boolean
-        get() = isViewerReady
+        get() = isViewerReady()
 
     /**
      * Starts the :x11 service with the given generation, ensuring the prerequisite XKB data is
@@ -92,6 +86,6 @@ object EmbeddedX11Display {
      * no context is available (e.g. during tests). Callers that need a real context should pass
      * one in explicitly.
      */
-    private val serviceStateFile: File
+    val serviceStateFile: File
         get() = File("/data/data/com.qali.dterm/files/" + "embedded-x11-service.state")
 }
