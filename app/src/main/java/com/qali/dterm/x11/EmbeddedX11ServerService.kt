@@ -35,7 +35,7 @@ class EmbeddedX11ServerService : Service() {
     private val connectionBinder = object : ICmdEntryInterface.Stub() {
         override fun getXConnection() = EmbeddedX11ServerBridge.getXConnection()
         override fun getLogcatOutput() = null
-        override fun asBinder(): IBinder = mBinder
+        override fun asBinder(): IBinder = this
     }
 
     override fun onCreate() {
