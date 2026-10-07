@@ -11,6 +11,8 @@ import android.system.OsConstants
 import android.util.Log
 import androidx.core.content.ContextCompat
 import com.termux.x11.EmbeddedX11Display
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.delay
 import java.io.File
 import java.util.IdentityHashMap
@@ -163,11 +165,13 @@ internal object EmbeddedX11ServiceController {
                             // section. cancelPendingDisplayOpen() cannot return and close the
                             // viewer until this launch request has completed.
                             try {
-                                EmbeddedX11Display.connect(
-                                    appContext,
-                                    service,
-                                    serviceGeneration,
-                                )
+                                withContext(Dispatchers.Main) {
+                                    EmbeddedX11Display.connect(
+                                        appContext,
+                                        service,
+                                        serviceGeneration,
+                                    )
+                                }
                             } catch (launchFailure: RuntimeException) {
                                 // ServiceConnection callbacks run on the main thread after
                                 // openDisplay() has already returned. Never let an Activity launch
